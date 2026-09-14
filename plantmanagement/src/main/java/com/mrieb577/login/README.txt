@@ -1,0 +1,1 @@
+Big thanks to https://www.geeksforgeeks.org/springboot/spring-boot-3-0-jwt-authentication-with-spring-security-using-mysql-database/
