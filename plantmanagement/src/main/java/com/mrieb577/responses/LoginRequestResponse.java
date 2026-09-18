@@ -8,7 +8,7 @@ public class LoginRequestResponse extends RequestResponse {
     public String date_joined;
 
     public LoginRequestResponse(int code, String token, UserInfo user){
-        super(code);
+        super(code, "OK");
         this.token = token;
         if(user != null){
             this.name = user.name;
