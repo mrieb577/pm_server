@@ -12,7 +12,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: server/plantmanagement
+        working-directory: plantmanagement
 
     steps:
       - name: check out the code
