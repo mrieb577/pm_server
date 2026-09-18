@@ -16,6 +16,7 @@ import com.mrieb577.database.DatabaseConnection;
 import com.mrieb577.database.UsersDB;
 import com.mrieb577.login.AuthRequest;
 import com.mrieb577.login.JwtUtil;
+import com.mrieb577.login.NewUserInfo;
 import com.mrieb577.login.UserInfo;
 import com.mrieb577.login.UserInfoService;
 import com.mrieb577.responses.LoginRequestResponse;
@@ -38,17 +39,23 @@ public class LoginEndpoint {
     }
 
     @PostMapping("/add-user")
-    public String addUser(@RequestBody UserInfo userInfo){
+    public String addUser(@RequestBody NewUserInfo userInfo){
+        Gson gson = new Gson();
         DatabaseConnection connection = new DatabaseConnection();
         if (!connection.isConnected()) {
-            return "Failed to connect to database";
+            return gson.toJson(new RequestResponse(RequestResponse.SERVER_ERROR_CODE, "Server error"));
         }
         // check that the email does not exist in the database
         UserInfo user = UsersDB.getUserByEmail(connection, userInfo.getEmail());
         log.info("found user id - {}", user.user_id);
-        if(user.email == null)
-            return userDetailsService.addUser(userInfo);
-        else return "User already exists with this email!";
+        if(user.email == null){
+            UserInfo newUser = new UserInfo();
+            newUser.name = userInfo.getName();
+            newUser.email = userInfo.getEmail();
+            newUser.password = userInfo.getPassword();
+            return userDetailsService.addUser(newUser);
+        }
+        else return gson.toJson(new RequestResponse(RequestResponse.REDUNDANT_SUCCESS_CODE, "User already exists"));
     }
 
     @PostMapping("/generate-token") // aka login
@@ -56,20 +63,20 @@ public class LoginEndpoint {
         Gson gson = new Gson();
         try{
             Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.username, authRequest.password)
+                new UsernamePasswordAuthenticationToken(authRequest.username, authRequest.password) 
             );
             if(authentication.isAuthenticated()){
                 DatabaseConnection connection = new DatabaseConnection();
                 if (!connection.isConnected()) {
-                    return gson.toJson(new LoginRequestResponse(RequestResponse.SERVER_ERROR_CODE, "Server error", null));
+                    return gson.toJson(new RequestResponse(RequestResponse.SERVER_ERROR_CODE, "Server error"));
                 }
                 UserInfo user = UsersDB.getUserByEmail(connection, authRequest.username);
                 String token = jwtUtil.generateToken(authRequest.username);
                 return gson.toJson(new LoginRequestResponse(RequestResponse.SUCCESS_CODE, token, user));
             }
-            return gson.toJson(new LoginRequestResponse(RequestResponse.ACCESS_DENIED_CODE, "Access denied", null));
+            return gson.toJson(new RequestResponse(RequestResponse.ACCESS_DENIED_CODE, "Access denied"));
         } catch (Exception e){
-            return gson.toJson(new LoginRequestResponse(RequestResponse.SERVER_ERROR_CODE, "Server error", null));
+            return gson.toJson(new RequestResponse(RequestResponse.SERVER_ERROR_CODE, "Server error"));
         }
     }
 }

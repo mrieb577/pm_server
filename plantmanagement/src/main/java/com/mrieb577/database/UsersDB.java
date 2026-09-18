@@ -10,13 +10,13 @@ import com.mrieb577.login.UserInfo;
 public class UsersDB {
     private static Logger log = LoggerFactory.getLogger(UsersDB.class);
 
-    private static final String COLUMNS = "user_id,name,email,password,date_joined,roles";
-    private static final String INSERT_COLUMNS = "name,email,password,date_joined,roles";
+    private static final String COLUMNS = "user_id,username,email,password,date_joined,roles";
+    private static final String INSERT_COLUMNS = "username,email,password,date_joined,roles";
     private static final String TABLE = "userdata";
 
     public static UserInfo getUserByEmail(DatabaseConnection conn, String email){
         String query = "select " + COLUMNS + " from " + TABLE + " where email = '" + email + "'";
-        return query(conn, query);
+        return email_query(conn, query);
     }
 
     public static void addUser(DatabaseConnection dbConnection, UserInfo userInfo) {
@@ -36,15 +36,15 @@ public class UsersDB {
         }
     }
 
-    private static UserInfo query(DatabaseConnection conn, String query){
+    private static UserInfo email_query(DatabaseConnection conn, String query){
         UserInfo result = new UserInfo();
         try {
             var statement = conn.createStatement();
             var resultSet = statement.executeQuery(query);
 
-            while(resultSet.next()){
+            if (resultSet.next()) {
                 result.user_id = resultSet.getLong("user_id");
-                result.name = resultSet.getString("name");
+                result.name = resultSet.getString("username");
                 result.email = resultSet.getString("email");
                 result.password = resultSet.getString("password");
                 result.date_joined = resultSet.getString("date_joined");
